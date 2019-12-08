@@ -7,7 +7,8 @@ import { uglify } from 'rollup-plugin-uglify';
 const ensureArray = maybeArr =>
     Array.isArray(maybeArr) ? maybeArr : [maybeArr];
 
-const external = Object.keys(pkg.dependencies || {});
+const external = Object.keys(pkg.peerDependencies || {});
+const allExternal = external.concat(Object.keys(pkg.peerDependencies || {}));
 
 const makeExternalPredicate = externalArr => {
     if (externalArr.length === 0) {
@@ -21,7 +22,7 @@ const createConfig = ({ output, min = false } = {}) => {
     return {
         input: 'src/index.js',
         output: ensureArray(output).map(output => {
-            output.name = 'EventBus';
+            output.name = 'VueEventBus';
             if (min) {
                 output.file = output.file.replace(/\.js$/, '.min.js');
             }
@@ -52,7 +53,7 @@ const createConfig = ({ output, min = false } = {}) => {
                 }
             })
         ].filter(Boolean),
-        external: makeExternalPredicate(output.format === 'umd' ? [] : external)
+        external: makeExternalPredicate(output.format === 'umd' ? external : allExternal)
     };
 };
 
