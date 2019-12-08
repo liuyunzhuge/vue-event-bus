@@ -7,7 +7,7 @@
     "browser": "dist/index.umd.js",
     "repository": {
       "type": "git",
-      "url": "git+https://github.com/liuyunzhuge/event-bus"
+      "url": "git+https://github.com/liuyunzhuge/vue-event-bus"
     },
     "keywords": [
       "event-bus",
@@ -16,9 +16,9 @@
     "author": "liuyunzhuge",
     "license": "MIT",
     "bugs": {
-      "url": "https://github.com/liuyunzhuge/event-bus/issues"
+      "url": "https://github.com/liuyunzhuge/vue-event-bus/issues"
     },
-    "homepage": "https://github.com/liuyunzhuge/event-bus#readme",
+    "homepage": "https://github.com/liuyunzhuge/vue-event-bus#readme",
     "devDependencies": {
       "@babel/cli": "^7.7.4",
       "@babel/core": "^7.7.4",
