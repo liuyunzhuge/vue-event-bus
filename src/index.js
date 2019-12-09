@@ -57,7 +57,7 @@ export default {
 
             instance.$on('hook:beforeDestroy', () => {
                 print('log', "hook:beforeDestroy:clean all listeners on current instance")
-                proxy.$off(namespace)
+                proxy.$off('')
             })
 
             return proxy
@@ -96,5 +96,7 @@ export default {
         }
 
         Object.defineProperty(Vue.prototype, name, eventBusPropDef)
+
+        // todo 解决原型与实例对象访问$eventBus时的api一致性
     }
 }

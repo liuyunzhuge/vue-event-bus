@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.7.4",
-    "breif-event-bus": "^0.1.9"
+    "breif-event-bus": "~0.1.10"
   },
   "peerDependencies": {
     "vue": "^2.6.10"
