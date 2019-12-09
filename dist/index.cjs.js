@@ -1,11 +1,5 @@
 'use strict';
 
-function _objectDestructuringEmpty(obj) {
-  if (obj == null) throw new TypeError("Cannot destructure undefined");
-}
-
-var objectDestructuringEmpty = _objectDestructuringEmpty;
-
 function _classCallCheck(instance, Constructor) {
   if (!(instance instanceof Constructor)) {
     throw new TypeError("Cannot call a class as a function");
@@ -89,6 +83,10 @@ var isArray = function isArray(some) {
   return Object.prototype.toString.call(some) == '[object Array]';
 };
 
+var isString = function isString(some) {
+  return Object.prototype.toString.call(some) == '[object String]';
+};
+
 function parseEvent(event) {
   event = event.split('.');
   return {
@@ -103,7 +101,7 @@ function getNamespaceMatcher(namespaceList) {
 
 function normalizeEvents(events) {
   if (!isArray(events)) {
-    events = [events];
+    events = [isString(isString) ? events : String(events)];
   }
 
   var _iteratorNormalCompletion = true;
@@ -178,6 +176,7 @@ function () {
      */
     value: function on(events, callback) {
       var once = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+      if (!events) return;
       events = normalizeEvents(events);
       var _iteratorNormalCompletion2 = true;
       var _didIteratorError2 = false;
@@ -237,7 +236,9 @@ function () {
       } else if (arguments.length == 2) {
         events = arguments.length <= 0 ? undefined : arguments[0];
         callback = arguments.length <= 1 ? undefined : arguments[1];
-      } else {
+      }
+
+      if (!events) {
         return this.entries.clear();
       }
 
@@ -281,6 +282,7 @@ function () {
   }, {
     key: "trigger",
     value: function trigger(event) {
+      if (!event) return;
       event = parseEvent(event);
       var entry = findEntry(this.entries, event.name);
 
@@ -416,14 +418,20 @@ function () {
 
 var isArray$1 = function isArray(some) {
   return Object.prototype.toString.call(some) == '[object Array]';
-}; // todo change this function
+};
 
-
-function createNamespace(instance) {
-  return '.ns' + "".concat(Math.random()).replace(/\./g, '');
+function _createNamespace(instance) {
+  var t = 'xxxxyyyyxy';
+  return '.' + t.replace(/[xy]/g, function (c) {
+    var r = Math.random() * 16 | 0;
+    var v = c === 'x' ? r : r & 0x3 | 0x8;
+    return v.toString(16);
+  });
 }
 
 function normalizeEvents$1(namespace, events) {
+  if (!events) return events;
+
   if (!isArray$1(events)) {
     events = [events];
   }
@@ -433,27 +441,34 @@ function normalizeEvents$1(namespace, events) {
   });
 }
 
+function printConsole(log, level) {
+  var _console;
+
+  if (!log) return;
+
+  for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+    args[_key - 2] = arguments[_key];
+  }
+
+  (_console = console)[level].apply(_console, args);
+}
+
 var index = {
   install: function install(Vue) {
-    var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-    objectDestructuringEmpty(_ref);
+    var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        _ref$log = _ref.log,
+        log = _ref$log === void 0 ? false : _ref$log,
+        _ref$createNamespace = _ref.createNamespace,
+        createNamespace = _ref$createNamespace === void 0 ? _createNamespace : _ref$createNamespace;
 
     var bus = new EventBus();
 
-    function createProxy(instance, _noConflict) {
-      var namespace = createNamespace();
-      instance.$on('hook:beforeDestroy', function () {
-        // clean all listeners on current instance
-        proxy.$off();
-      });
+    function createProxy(instance) {
+      var namespace = createNamespace(instance);
       var proxy = {
         $emit: function $emit() {
           bus.trigger.apply(bus, arguments);
           return this;
-        },
-        noConflict: function noConflict() {
-          return _noConflict.call(this);
         },
         namespace: namespace,
         core: bus
@@ -472,28 +487,49 @@ var index = {
         _loop();
       }
 
+      instance.$on('hook:beforeDestroy', function () {
+        printConsole(log, 'log', "hook:beforeDestroy:clean all listeners on current instance");
+        proxy.$off(namespace);
+      });
       return proxy;
     }
 
-    function noConflict() {
-      oldDescriptor && Object.defineProperty(Vue.prototype, name, oldDescriptor);
-      return this;
+    function bindBusProxyToInstance(instance) {
+      if (!instance[busProxySymbol]) {
+        instance[busProxySymbol] = createProxy(instance);
+      }
+
+      return instance[busProxySymbol];
     }
 
     var name = '$eventBus';
-    var oldDescriptor = Object.getOwnPropertyDescriptor(Vue.prototype, name);
-    var keyOnInstance = Symbol();
-    Object.defineProperty(Vue.prototype, name, {
+    var prevEventBusPropDef = Object.getOwnPropertyDescriptor(Vue.prototype, name);
+    var busProxySymbol = Symbol('eventBus');
+    var eventBusPropDef = {
       configurable: true,
       enumerable: false,
       get: function get() {
-        if (!this[keyOnInstance]) {
-          this[keyOnInstance] = createProxy(this, noConflict);
+        if (this === Vue.prototype) {
+          return bus;
         }
 
-        return this[keyOnInstance];
+        return bindBusProxyToInstance(this);
       }
-    });
+    };
+
+    bus.noConflict = function () {
+      delete bus.noConflict;
+
+      if (prevEventBusPropDef) {
+        Object.defineProperty(Vue.prototype, name, prevEventBusPropDef);
+      } else {
+        delete Vue.prototype[name];
+      }
+
+      return bindBusProxyToInstance;
+    };
+
+    Object.defineProperty(Vue.prototype, name, eventBusPropDef);
   }
 };
 

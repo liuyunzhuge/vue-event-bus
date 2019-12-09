@@ -2,39 +2,43 @@ import EventBus from "breif-event-bus"
 
 const isArray = some => Object.prototype.toString.call(some) == '[object Array]'
 
-// todo change this function
-function createNamespace(instance) {
-    return '.ns' + `${Math.random()}`.replace(/\./g, '')
+function _createNamespace(instance) {
+    const t = 'xxxxyyyyxy'
+    return '.' + t.replace(/[xy]/g, function (c) {
+        const r = Math.random() * 16 | 0
+        const v = c === 'x' ? r : (r & 0x3 | 0x8)
+        return v.toString(16)
+    })
 }
 
 function normalizeEvents(namespace, events) {
+    if (!events) return events
     if (!isArray(events)) {
         events = [events]
     }
 
-    return events.map(e => e + namespace);
+    return events.map(e => e + namespace)
+}
+
+function printConsole(log, level, ...args) {
+    if (!log) return
+    console[level](...args)
 }
 
 export default {
     install(Vue, {
+        log = false,
+        createNamespace = _createNamespace
     } = {}) {
         let bus = new EventBus
 
-        function createProxy(instance, _noConflict) {
+        function createProxy(instance) {
             let namespace = createNamespace(instance)
-
-            instance.$on('hook:beforeDestroy', () => {
-                // clean all listeners on current instance
-                proxy.$off()
-            });
 
             let proxy = {
                 $emit(...args) {
                     bus.trigger(...args)
                     return this
-                },
-                noConflict() {
-                    return _noConflict.call(this);
                 },
                 namespace,
                 core: bus
@@ -47,26 +51,46 @@ export default {
                 }.bind(proxy)
             }
 
+            instance.$on('hook:beforeDestroy', () => {
+                printConsole(log, 'log', "hook:beforeDestroy:clean all listeners on current instance")
+                proxy.$off(namespace)
+            })
+
             return proxy
         }
 
-        function noConflict() {
-            oldDescriptor && Object.defineProperty(Vue.prototype, name, oldDescriptor)
-            return this
+        function bindBusProxyToInstance(instance) {
+            if (!instance[busProxySymbol]) {
+                instance[busProxySymbol] = createProxy(instance)
+            }
+            return instance[busProxySymbol]
         }
 
         let name = '$eventBus'
-        let oldDescriptor = Object.getOwnPropertyDescriptor(Vue.prototype, name)
-        let keyOnInstance = Symbol()
-        Object.defineProperty(Vue.prototype, name, {
+        let prevEventBusPropDef = Object.getOwnPropertyDescriptor(Vue.prototype, name)
+        let busProxySymbol = Symbol('eventBus')
+        let eventBusPropDef = {
             configurable: true,
             enumerable: false,
             get: function () {
-                if (!this[keyOnInstance]) {
-                    this[keyOnInstance] = createProxy(this, noConflict)
+                if (this === Vue.prototype) {
+                    return bus
                 }
-                return this[keyOnInstance]
+                return bindBusProxyToInstance(this)
             }
-        })
+        }
+
+        bus.noConflict = function () {
+            delete bus.noConflict
+
+            if (prevEventBusPropDef) {
+                Object.defineProperty(Vue.prototype, name, prevEventBusPropDef)
+            } else {
+                delete Vue.prototype[name]
+            }
+            return bindBusProxyToInstance
+        }
+
+        Object.defineProperty(Vue.prototype, name, eventBusPropDef)
     }
 }

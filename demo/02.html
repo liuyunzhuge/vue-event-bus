@@ -22,40 +22,42 @@
             el: '#app'
         })
 
-        app.$eventBus.$on('a.n1.n2.n3', (data)=>{
+        let EventBusManager = Vue.prototype.$eventBus.noConflict()
+
+        EventBusManager(app).$on('a.n1.n2.n3', (data)=>{
             console.log('n1n2n3', data)
         })
 
-        app.$eventBus.$on('a.n1.n2', (data)=>{
+        EventBusManager(app).$on('a.n1.n2', (data)=>{
             console.log('n1n2', data)
         })
 
-        app.$eventBus.$on('a.n2.n3', (data)=>{
+        EventBusManager(app).$on('a.n2.n3', (data)=>{
             console.log('n2n3', data)
         })
 
-        app.$eventBus.$on('b.n1.n2', (data)=>{
+        EventBusManager(app).$on('b.n1.n2', (data)=>{
             console.log('n1n2', data)
         })
 
-        app.$eventBus.$on('b.n2.n3', (data)=>{
+        EventBusManager(app).$on('b.n2.n3', (data)=>{
             console.log('n2n3', data)
         })
 
-        app.$eventBus.$emit('a', 'aaa')
-        app.$eventBus.$emit('b', 'bbb')
+        EventBusManager(app).$emit('a', 'aaa')
+        EventBusManager(app).$emit('b', 'bbb')
 
         console.log('==============')
 
-        app.$eventBus.$off('b')
-        app.$eventBus.$emit('a', 'aaa')
-        app.$eventBus.$emit('b', 'bbb')
+        EventBusManager(app).$off('b')
+        EventBusManager(app).$emit('a', 'aaa')
+        EventBusManager(app).$emit('b', 'bbb')
 
         console.log('==============')
 
-        app.$eventBus.$off()
-        app.$eventBus.$emit('a', 'aaa')
-        app.$eventBus.$emit('b', 'bbb')
+        EventBusManager(app).$off()
+        EventBusManager(app).$emit('a', 'aaa')
+        EventBusManager(app).$emit('b', 'bbb')
 
     </script>
 </body>
