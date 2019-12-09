@@ -20,8 +20,10 @@ function normalizeEvents(namespace, events) {
     return events.map(e => e + namespace)
 }
 
-function printConsole(log, level, ...args) {
-    if (!log) return
+let LOG_ENABLED = false
+
+function print(level, ...args) {
+    if (!LOG_ENABLED) return
     console[level](...args)
 }
 
@@ -30,6 +32,8 @@ export default {
         log = false,
         createNamespace = _createNamespace
     } = {}) {
+        LOG_ENABLED = log
+
         let bus = new EventBus
 
         function createProxy(instance) {
@@ -52,7 +56,7 @@ export default {
             }
 
             instance.$on('hook:beforeDestroy', () => {
-                printConsole(log, 'log', "hook:beforeDestroy:clean all listeners on current instance")
+                print('log', "hook:beforeDestroy:clean all listeners on current instance")
                 proxy.$off(namespace)
             })
 

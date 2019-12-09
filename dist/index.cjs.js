@@ -441,13 +441,15 @@ function normalizeEvents$1(namespace, events) {
   });
 }
 
-function printConsole(log, level) {
+var LOG_ENABLED = false;
+
+function print(level) {
   var _console;
 
-  if (!log) return;
+  if (!LOG_ENABLED) return;
 
-  for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-    args[_key - 2] = arguments[_key];
+  for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+    args[_key - 1] = arguments[_key];
   }
 
   (_console = console)[level].apply(_console, args);
@@ -461,6 +463,7 @@ var index = {
         _ref$createNamespace = _ref.createNamespace,
         createNamespace = _ref$createNamespace === void 0 ? _createNamespace : _ref$createNamespace;
 
+    LOG_ENABLED = log;
     var bus = new EventBus();
 
     function createProxy(instance) {
@@ -488,7 +491,7 @@ var index = {
       }
 
       instance.$on('hook:beforeDestroy', function () {
-        printConsole(log, 'log', "hook:beforeDestroy:clean all listeners on current instance");
+        print('log', "hook:beforeDestroy:clean all listeners on current instance");
         proxy.$off(namespace);
       });
       return proxy;
