@@ -37,7 +37,7 @@ export default {
         let bus = new EventBus
 
         function createProxy(instance) {
-            let namespace = createNamespace(instance)
+            let namespace = !instance ? undefined : createNamespace(instance)
 
             let proxy = {
                 $emit(...args) {
@@ -50,12 +50,12 @@ export default {
 
             for (let entry of [['$on', 'on'], ['$off', 'off'], ['$once', 'once']]) {
                 proxy[entry[0]] = function (events, callback) {
-                    bus[entry[1]](normalizeEvents(namespace, events), callback)
+                    bus[entry[1]](namespace ? normalizeEvents(namespace, events) : events, callback)
                     return this
                 }.bind(proxy)
             }
 
-            instance.$on('hook:beforeDestroy', () => {
+            instance && instance.$on('hook:beforeDestroy', () => {
                 print('log', "hook:beforeDestroy:clean all listeners on current instance")
                 proxy.$off('')
             })
@@ -73,19 +73,20 @@ export default {
         let name = '$eventBus'
         let prevEventBusPropDef = Object.getOwnPropertyDescriptor(Vue.prototype, name)
         let busProxySymbol = Symbol('eventBus')
+        let protoBusProxy = createProxy(null)
         let eventBusPropDef = {
             configurable: true,
             enumerable: false,
             get: function () {
                 if (this === Vue.prototype) {
-                    return bus
+                    return protoBusProxy
                 }
                 return bindBusProxyToInstance(this)
             }
         }
 
-        bus.noConflict = function () {
-            delete bus.noConflict
+        protoBusProxy.noConflict = function () {
+            delete protoBusProxy.noConflict
 
             if (prevEventBusPropDef) {
                 Object.defineProperty(Vue.prototype, name, prevEventBusPropDef)
@@ -96,7 +97,5 @@ export default {
         }
 
         Object.defineProperty(Vue.prototype, name, eventBusPropDef)
-
-        // todo 解决原型与实例对象访问$eventBus时的api一致性
     }
 }

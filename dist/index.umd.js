@@ -501,7 +501,7 @@
       var bus = new EventBus();
 
       function createProxy(instance) {
-        var namespace = createNamespace(instance);
+        var namespace = !instance ? undefined : createNamespace(instance);
         var proxy = {
           $emit: function $emit() {
             bus.trigger.apply(bus, arguments);
@@ -515,7 +515,7 @@
           var entry = _arr[_i];
 
           proxy[entry[0]] = function (events, callback) {
-            bus[entry[1]](normalizeEvents$1(namespace, events), callback);
+            bus[entry[1]](namespace ? normalizeEvents$1(namespace, events) : events, callback);
             return this;
           }.bind(proxy);
         };
@@ -524,7 +524,7 @@
           _loop();
         }
 
-        instance.$on('hook:beforeDestroy', function () {
+        instance && instance.$on('hook:beforeDestroy', function () {
           print('log', "hook:beforeDestroy:clean all listeners on current instance");
           proxy.$off('');
         });
@@ -542,20 +542,21 @@
       var name = '$eventBus';
       var prevEventBusPropDef = Object.getOwnPropertyDescriptor(Vue.prototype, name);
       var busProxySymbol = Symbol('eventBus');
+      var protoBusProxy = createProxy(null);
       var eventBusPropDef = {
         configurable: true,
         enumerable: false,
         get: function get() {
           if (this === Vue.prototype) {
-            return bus;
+            return protoBusProxy;
           }
 
           return bindBusProxyToInstance(this);
         }
       };
 
-      bus.noConflict = function () {
-        delete bus.noConflict;
+      protoBusProxy.noConflict = function () {
+        delete protoBusProxy.noConflict;
 
         if (prevEventBusPropDef) {
           Object.defineProperty(Vue.prototype, name, prevEventBusPropDef);
