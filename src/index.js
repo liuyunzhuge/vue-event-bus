@@ -17,7 +17,7 @@ function normalizeEvents(namespace, events) {
         events = [events]
     }
 
-    return events.map(e => e + namespace)
+    return events.map(e => e === namespace ? e : (e + namespace))
 }
 
 let LOG_ENABLED = false
@@ -57,7 +57,7 @@ export default {
 
             instance && instance.$on('hook:beforeDestroy', () => {
                 print('log', "hook:beforeDestroy:clean all listeners on current instance")
-                proxy.$off('')
+                proxy.$off(namespace)
             })
 
             return proxy

@@ -471,7 +471,7 @@
     }
 
     return events.map(function (e) {
-      return e + namespace;
+      return e === namespace ? e : e + namespace;
     });
   }
 
@@ -526,7 +526,7 @@
 
         instance && instance.$on('hook:beforeDestroy', function () {
           print('log', "hook:beforeDestroy:clean all listeners on current instance");
-          proxy.$off('');
+          proxy.$off(namespace);
         });
         return proxy;
       }

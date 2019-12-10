@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,58 +8,148 @@
     <title>Document</title>
     <script src="../node_modules/vue/dist/vue.js"></script>
     <script src="../dist/index.umd.js"></script>
+    <style type="text/css">
+        ul,
+        li {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .fix:after {
+            content: '';
+            display: block;
+            clear: both;
+        }
+
+        .tabs li {
+            display: block;
+            float: left;
+        }
+
+        .tabs li a {
+            display: block;
+            line-height: 1;
+            font-size: 14px;
+            padding: 10px 20px;
+            text-decoration: none;
+            color: #07C160;
+            position: relative;
+        }
+
+        .tabs li.active a:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            height: 2px;
+            background-color: #07c160;
+            left: 0;
+            width: 100%;
+        }
+
+        .fade-enter-active,
+        .fade-leave-active {
+            transition: opacity .3s;
+            position: absolute;
+        }
+
+        .fade-enter,
+        .fade-leave-to {
+            opacity: 0;
+        }
+    </style>
 </head>
+
 <body>
     <div id="app">
-        <keep-alive></keep-alive>
+        <ul class="tabs fix">
+            <li :class="{active: current==='component-a'}"><a href="#" @click.prevent="current='component-a'">A</a></li>
+            <li :class="{active: current==='component-b'}"><a href="#" @click.prevent="current='component-b'">B</a></li>
+            <li :class="{active: current==='component-c'}"><a href="#" @click.prevent="current='component-c'">C</a></li>
+            <li :class="{active: current==='component-d'}"><a href="#" @click.prevent="current='component-d'">D</a></li>
+            <li :class="{active: current==='component-e'}"><a href="#" @click.prevent="current='component-e'">E</a></li>
+        </ul>
+        <transition name="fade">
+            <keep-alive max="4">
+                <component :is="current"></component>
+            </keep-alive>
+        </transition>
     </div>
 
     <script>
-        Vue.use(VueEventBus, {
-            log: true
+        Vue.use(VueEventBus)
+        let EventBusManager = Vue.prototype.$eventBus.noConflict()
+
+        function ExampleComponent({ name, once = false, button = false }) {
+            return Vue.extend({
+                template: `
+                <div>
+                    <h2>Page ${name}, nickname: {{nickname}}</h2>
+                    ${button ? "<div><button type=\"button\" @click=\"$eventBus.$off('nickname')\">Cancel</button></div>" : ''}
+                </div>
+            `,
+                data() {
+                    return {
+                        nickname: 'liuyunzhuge'
+                    }
+                },
+                computed: {
+                    $eventBus() {
+                        return EventBusManager(this)
+                    }
+                },
+                created() {
+                    this.$eventBus[once ? '$once' : '$on']('nickname', (nickname) => {
+                        console.log(`Page ${name} received nickname change message`)
+                        this.nickname = nickname
+                    })
+                }
+            })
+        }
+
+        let ComponentA = new ExampleComponent({ name: 'A' })
+        let ComponentB = new ExampleComponent({ name: 'B', button: true })
+        let ComponentC = new ExampleComponent({ name: 'C', once: true })
+        let ComponentD = new ExampleComponent({ name: 'D' })
+
+        let ComponentE = Vue.extend({
+            template: `
+                <div>
+                    <input type="text" v-model="nickname"/>
+                    <button type="button" @click="update">Update</button>
+                </div>
+            `,
+            data() {
+                return {
+                    nickname: 'liuyunzhuge'
+                }
+            },
+            computed: {
+                $eventBus() {
+                    return EventBusManager(this)
+                }
+            },
+            methods: {
+                update() {
+                    this.$eventBus.$emit('nickname', this.nickname)
+                }
+            }
         })
 
         let app = new Vue({
-            el: '#app'
+            el: '#app',
+            components: {
+                ComponentA,
+                ComponentB,
+                ComponentC,
+                ComponentD,
+                ComponentE
+            },
+            data: {
+                current: 'component-a'
+            }
         })
-
-        let EventBusManager = Vue.prototype.$eventBus.noConflict()
-
-        EventBusManager(app).$on('a.n1.n2.n3', (data)=>{
-            console.log('n1n2n3', data)
-        })
-
-        EventBusManager(app).$on('a.n1.n2', (data)=>{
-            console.log('n1n2', data)
-        })
-
-        EventBusManager(app).$on('a.n2.n3', (data)=>{
-            console.log('n2n3', data)
-        })
-
-        EventBusManager(app).$on('b.n1.n2', (data)=>{
-            console.log('n1n2', data)
-        })
-
-        EventBusManager(app).$on('b.n2.n3', (data)=>{
-            console.log('n2n3', data)
-        })
-
-        EventBusManager(app).$emit('a', 'aaa')
-        EventBusManager(app).$emit('b', 'bbb')
-
-        console.log('==============')
-
-        EventBusManager(app).$off('b')
-        EventBusManager(app).$emit('a', 'aaa')
-        EventBusManager(app).$emit('b', 'bbb')
-
-        console.log('==============')
-
-        EventBusManager(app).$off()
-        EventBusManager(app).$emit('a', 'aaa')
-        EventBusManager(app).$emit('b', 'bbb')
-
     </script>
 </body>
+
 </html>
