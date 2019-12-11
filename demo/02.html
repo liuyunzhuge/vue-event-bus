@@ -77,8 +77,19 @@
     </div>
 
     <script>
+        Vue.prototype.$eventBus = { n: 'yes' }
+
         Vue.use(VueEventBus)
         let EventBusManager = Vue.prototype.$eventBus.noConflict()
+        // Vue.prototype.$eventBus will be set to `{ n: 'yes' }`
+
+        Vue.mixin({
+            computed: {
+                $eventBus() {
+                    return EventBusManager(this)
+                }
+            }
+        })
 
         function ExampleComponent({ name, once = false, button = false }) {
             return Vue.extend({
@@ -91,11 +102,6 @@
                 data() {
                     return {
                         nickname: 'liuyunzhuge'
-                    }
-                },
-                computed: {
-                    $eventBus() {
-                        return EventBusManager(this)
                     }
                 },
                 created() {
@@ -122,11 +128,6 @@
             data() {
                 return {
                     nickname: 'liuyunzhuge'
-                }
-            },
-            computed: {
-                $eventBus() {
-                    return EventBusManager(this)
                 }
             },
             methods: {
