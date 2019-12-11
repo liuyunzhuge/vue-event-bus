@@ -117,3 +117,5 @@ Vue.use(EventBus, {
     }
 })
 ```
+
+补充：这个库适合与类似[vue-navigation](https://github.com/zack24q/vue-navigation)这种基于路由模拟APP页面栈的工具库一起使用。
