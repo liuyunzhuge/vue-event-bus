@@ -189,11 +189,8 @@
         try {
           for (var _iterator2 = events[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
             var event = _step2.value;
-
-            if (event.name) {
-              var entry = findEntryOrCreate(this.entries, event.name);
-              entry.addCallback(event.namespaceList, callback, once);
-            }
+            var entry = findEntryOrCreate(this.entries, event.name);
+            entry.addCallback(event.namespaceList, callback, once);
           }
         } catch (err) {
           _didIteratorError2 = true;
@@ -257,39 +254,10 @@
         try {
           for (var _iterator3 = events[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
             var event = _step3.value;
+            var entry = findEntry(this.entries, event.name);
 
-            if (event.name) {
-              var entry = findEntry(this.entries, event.name);
-
-              if (entry) {
-                entry.removeCallback(event.namespaceList, callback);
-              }
-            } else if (event.namespaceList) {
-              var _iteratorNormalCompletion4 = true;
-              var _didIteratorError4 = false;
-              var _iteratorError4 = undefined;
-
-              try {
-                for (var _iterator4 = this.entries[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-                  var _step4$value = _slicedToArray(_step4.value, 2),
-                      _entry = _step4$value[1];
-
-                  _entry.removeCallback(event.namespaceList, callback);
-                }
-              } catch (err) {
-                _didIteratorError4 = true;
-                _iteratorError4 = err;
-              } finally {
-                try {
-                  if (!_iteratorNormalCompletion4 && _iterator4["return"] != null) {
-                    _iterator4["return"]();
-                  }
-                } finally {
-                  if (_didIteratorError4) {
-                    throw _iteratorError4;
-                  }
-                }
-              }
+            if (entry) {
+              entry.removeCallback(event.namespaceList, callback);
             }
           }
         } catch (err) {
@@ -320,7 +288,6 @@
       value: function trigger(event) {
         if (!event) return;
         event = parseEvent(event);
-        if (!event.name) return;
         var entry = findEntry(this.entries, event.name);
 
         if (entry) {
@@ -355,10 +322,7 @@
       key: "addCallback",
       value: function addCallback(namespaceList, callback) {
         var once = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-        // use `unshift` instead of `push`
-        // so that callbacks can be fired in the reverse order
-        // `once-only` callback can be easily removed by `splice`
-        this.listeners.unshift(new EventListener(callback, namespaceList.join('.'), once));
+        this.listeners.push(new EventListener(callback, namespaceList.join('.'), once));
       }
     }, {
       key: "removeCallback",
@@ -376,22 +340,28 @@
     }, {
       key: "fire",
       value: function fire(namespaceList) {
-        var matcher = namespaceList.length && getNamespaceMatcher(namespaceList);
-
         for (var _len2 = arguments.length, data = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
           data[_key2 - 1] = arguments[_key2];
         }
 
-        for (var i = this.listeners.length - 1; i >= 0; i--) {
-          if (!matcher || matcher.test(this.listeners[i].namespaces)) {
-            var _this$listeners$i;
+        var toBeRemoved = [];
+        var matcher = namespaceList.length && getNamespaceMatcher(namespaceList);
+        this.listeners.forEach(function (listener, index) {
+          if (!matcher || matcher.test(listener.namespaces)) {
+            listener.callback.apply(listener, data);
 
-            (_this$listeners$i = this.listeners[i]).callback.apply(_this$listeners$i, data);
-
-            if (this.listeners[i].once) {
-              this.listeners.splice(i, 1);
+            if (listener.once) {
+              toBeRemoved.push(index);
             }
           }
+        });
+        if (!toBeRemoved.length) return;
+        var hasRemoved = 0;
+
+        for (var _i = 0, _toBeRemoved = toBeRemoved; _i < _toBeRemoved.length; _i++) {
+          var index = _toBeRemoved[_i];
+          this.listeners.splice(index - hasRemoved, 1);
+          hasRemoved += 1;
         }
       }
     }, {
