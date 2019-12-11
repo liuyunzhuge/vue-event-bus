@@ -32,7 +32,7 @@ npm install vue-breif-event-bus
     </script>
     ```
 ### 使用
-* 直接通过vue实例使用
+* 基于Vue.prototype使用
     ```js
     import Vue from 'vue'
     import EventBus from 'vue-breif-event-bus'
@@ -57,7 +57,7 @@ npm install vue-breif-event-bus
         }
     })
     ```
-    `vue-breif-event-bus`作为插件，在Vue的`prototype`上注册了一个`$eventBus`的属性，所以任何Vue实例都可以直接通过`this.$eventBus`访问到一个基于[event-bus](https://github.com/liuyunzhuge/event-bus)构造的一个具备命名空间事件管理的对象，在`vue-breif-event-bus`内部，为了让使用者更加习惯地使用Vue api一致的事件管理方式，`$eventBus`提供了四个api，分别是`$on $once $off $emit`，用法去Vue官方api一致。
+    `vue-breif-event-bus`作为插件，在Vue的`prototype`上注册了一个`$eventBus`的属性，所以任何Vue实例都可以直接通过`this.$eventBus`访问到一个基于[event-bus](https://github.com/liuyunzhuge/event-bus)构造的具备命名空间事件管理的对象（不是`event-bus`的实例），在`vue-breif-event-bus`内部，为了让使用者更加习惯地使用Vue api一致的事件管理方式，重新给`$eventBus`设计了四个api，分别是`$on $once $off $emit`，用法与Vue官方api一致。
 * noConflict
     
     如果不想污染`Vue.prototype`，那么可以利用下面的方式来处理：
@@ -97,3 +97,23 @@ npm install vue-breif-event-bus
         }
     })
     ```
+## 其它
+给Vue实例创建独一无二的命名空间，使用的算法是：
+```js
+function _createNamespace(instance) {
+    const t = 'xxxxyyyyxy'
+    return '.' + t.replace(/[xy]/g, function (c) {
+        const r = Math.random() * 16 | 0
+        const v = c === 'x' ? r : (r & 0x3 | 0x8)
+        return v.toString(16)
+    })
+}
+```
+可以通过下面的方式来定义新的创建方式：
+```js
+Vue.use(EventBus, {
+    createNamespace(instance) {
+        // new implementation
+    }
+})
+```
