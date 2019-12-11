@@ -1,3 +1,7 @@
+[![npm](https://img.shields.io/npm/dm/vue-breif-event-bus.svg)](https://www.npmjs.com/package/vue-breif-event-bus)
+[![npm](https://img.shields.io/npm/v/vue-breif-event-bus.svg)](https://www.npmjs.com/package/vue-breif-event-bus)
+[![npm](https://img.shields.io/npm/l/vue-breif-event-bus.svg)](https://www.npmjs.com/package/vue-breif-event-bus)
+
 # vue-event-bus
 vue的一个小插件，用于单页应用下页面之间的消息传递。利用事件的命名空间，每个组件只需关心在event-bus上要订阅哪些消息，组件销毁时自身添加在event-bus的消息handler会自动清理掉，同时不影响其它组件。
 
