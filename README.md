@@ -101,6 +101,15 @@ npm install vue-breif-event-bus
         }
     })
     ```
+## DEMO
+```bash
+git clone https://github.com/liuyunzhuge/vue-event-bus
+cd vue-event-bus
+npm install
+node server
+```
+打开`http://localhost:8080/demo/01.html`和`http://localhost:8080/demo/02.html`即可预览前面两种使用方式的实际效果。这两个demo都是基于`keep-alive`和`component`组件写的，`keep-alive`配置了有`max`属性，所以能够模拟出vue实例被自动销毁的场景，从而测试`$eventBus`是否会自动移除掉被销毁实例的监听；同时有的组件用了`$once`的api，所以相应的回调只会派发一次；最后一个组件有用`$emit`的api，所以通过它能给其它被`keep-alive`缓存的组件，派发消息。
+
 ## 其它
 给Vue实例创建独一无二的命名空间，使用的算法是：
 ```js
