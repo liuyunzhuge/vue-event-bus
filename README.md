@@ -132,3 +132,37 @@ Vue.use(EventBus, {
 ```
 
 补充：这个库适合与类似[vue-navigation](https://github.com/zack24q/vue-navigation)这种基于路由模拟APP页面栈的工具库一起使用。
+
+## polyfills
+如果你在vue项目中，使用`vue-breif-event-bus`，你可能需要添加以下这些polyfills（[参考vue-cli官方polyfills说明](https://cli.vuejs.org/zh/guide/browser-compatibility.html#polyfill)）：
+```
+'es.symbol',
+'es.symbol.description',
+'es.symbol.iterator',
+'es.array.concat',
+'es.array.iterator',
+'es.array.join',
+'es.array.slice',
+'es.array.sort',
+'es.array.splice',
+'es.date.to-string',
+'es.function.name',
+'es.map',
+'es.object.define-property',
+'es.object.to-string',
+'es.regexp.constructor',
+'es.regexp.exec',
+'es.regexp.to-string',
+'es.string.iterator',
+'es.string.split',
+'web.dom-collections.iterator',
+'es.array.map',
+'es.object.get-own-property-descriptor',
+'es.string.replace'
+```
+以上polyfills是根据`vue-breif-event-bus`和`breif-event-bus`的源码，基于以下的browserlist配置:
+```
+'Android >= 4',
+'iOS >= 8'
+```
+利用`@babel/preset-env`的`useBuiltIns: "usage"`特性检测出来的。如果你想要polyfill的targets不一样，可以自行用babel来检测需要polyfill的features。
